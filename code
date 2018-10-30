@@ -1,0 +1,122 @@
+package com.company;
+
+import java.util.Arrays;
+
+public class Main {
+
+    static final  int populationSize = 1000;
+    static final double mutationChance = 0.01 ;
+    static final String[] population = new String[populationSize];
+    static final int[] populationFitness = new int[populationSize];
+    static final String targetWord = "jedrek to spoko ziomeczek ale slaby jungler";
+    static final int finalFitness = targetWord.length();
+    static String currentMostMachingWord = "";
+    static int currentBiggestFitness = 0;
+
+    public static void main(String[] args) {
+        generatePopulationZero();
+        System.out.println(Arrays.toString(population));
+        calculateFitness();
+        System.out.println(Arrays.toString(populationFitness));
+        int iteration = 0;
+        while(!didEvolve()){
+            calculateFitness();
+            mutate();
+            crossover();
+            System.out.printf("Iteration: %d Biggest fitness: %d Most matching word %s \n", iteration, currentBiggestFitness, currentMostMachingWord);
+            iteration ++;
+        }
+        for(int i = 0; i < populationSize; i++){
+            if(populationFitness[i] == finalFitness){
+                //System.out.println(population[i]);
+                return;
+            }
+        }
+        return;
+    }
+
+    public static void generatePopulationZero(){
+        for(int i = 0; i < populationSize; i++){
+            StringBuilder  chromosome = new StringBuilder();
+            for(int j = 0; j < finalFitness; j++){
+                chromosome.append(getRandomChar());
+            }
+            population[i] = chromosome.toString();
+
+        }
+
+    }
+
+    public static char getRandomChar(){
+        int randomNumber = (int)(Math.random()*27);
+        return randomNumber == 0 ? (char)32 : (char)(randomNumber + 96);
+    }
+
+    public static void calculateFitness(){
+        currentBiggestFitness = 0;
+        int fitness = 0;
+        for(int i = 0; i < populationSize; i ++){
+            for( int j = 0; j < finalFitness; j ++){
+                if(population[i].charAt(j) == targetWord.charAt(j)){
+                    fitness++;
+                }
+            }
+            if(currentBiggestFitness < fitness){
+                currentBiggestFitness = fitness;
+                currentMostMachingWord = population[i];
+            }
+            populationFitness[i] = fitness;
+            fitness = 0;
+
+        }
+    }
+    public static boolean didEvolve(){
+        for(int i = 0; i < populationSize; i++){
+            if(populationFitness[i] == finalFitness){
+                return true;
+            }
+        }
+        return false;
+    }
+    public static void mutate(){
+        for (int i = 0; i < populationSize; i ++){
+            for (int j = 0; j < finalFitness; j++){
+                if(Math.random() < mutationChance){
+                    population[i] = population[i].substring(0,j) + getRandomChar() + (j == finalFitness-1 ? "" : population[i].substring(j+1));
+                }
+            }
+        }
+    }
+    public static void crossover(){
+        int middlePoint = (int)(Math.random()*finalFitness);
+        //System.out.println(middlePoint);
+        String[] pool = new String[findWholeFitness()];
+        //System.out.println(pool.length);
+        int pointer = 0;
+        for (int i = 0; i < populationSize; i++){
+            for(int j = 0; j <= Math.pow(populationFitness[i],2); j++ ){
+                pool[pointer] = population[i];
+                //System.out.println(pool[pointer]);
+                pointer++;
+            }
+        }
+        int index = 0;
+        for (int i = 0; i < populationSize/2; i++){
+            String parentOne = pool[(int)(Math.random()*pool.length)];
+            String parentTwo = pool[(int)(Math.random()*pool.length)];
+            String childOne = parentOne.substring(0, middlePoint) + parentTwo.substring(middlePoint);
+            String childTwo = parentTwo.substring(0, middlePoint) + parentOne.substring(middlePoint);
+            population[index] = childOne;
+            index++;
+            population[index] = childTwo;
+            index++;
+        }
+    }
+    public static int findWholeFitness(){
+        int sum = 0;
+        for (int i = 0; i < populationSize; i++){
+            sum += Math.pow(populationFitness[i],2);
+        }
+        return sum;
+    }
+}
